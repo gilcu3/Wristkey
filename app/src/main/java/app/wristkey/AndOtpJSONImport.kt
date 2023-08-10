@@ -144,7 +144,7 @@ class AndOtpJSONImport : Activity() {
                         val reader = FileReader(file.path)
                         val jsonData = reader.readText()
 
-                        if (file.name.contains("bitwarden") && file.name.endsWith(".json")) {
+                        if (file.name.contains("otp") && file.name.endsWith(".json")) {
                             logins = utilities.andOtpToWristkey (JSONArray(jsonData))
                         }
 
@@ -163,16 +163,6 @@ class AndOtpJSONImport : Activity() {
                         Log.d ("Wristkey", "${file.name} is invalid")
                     }
 
-                    importingDescription.text = "Found file: \n${file.name}"
-
-                    Toast.makeText(applicationContext, "Imported ${logins.size} account(s)", Toast.LENGTH_SHORT).show()
-                    importingDescription.performHapticFeedback(HapticFeedbackConstants.REJECT)
-                    file.delete()
-
-                    for (login in logins) {
-                        importingDescription.text = "${login.issuer}"
-                        utilities.writeToVault(login, UUID.randomUUID().toString())
-                    }
                 }
 
             }
