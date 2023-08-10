@@ -182,16 +182,6 @@ class BitwardenJSONImport : Activity() {
                         Log.d ("Wristkey", "${file.name} is invalid")
                     }
 
-                    importingDescription.text = "Found file: \n${file.name}"
-
-                    Toast.makeText(applicationContext, "Imported ${logins.size} account(s)", Toast.LENGTH_SHORT).show()
-                    importingDescription.performHapticFeedback(HapticFeedbackConstants.REJECT)
-                    file.delete()
-
-                    for (login in logins) {
-                        importingDescription.text = "${login.issuer}"
-                        utilities.writeToVault(login, UUID.randomUUID().toString())
-                    }
                 }
 
             }
