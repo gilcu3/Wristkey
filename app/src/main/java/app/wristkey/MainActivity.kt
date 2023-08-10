@@ -91,7 +91,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        mfaCodesTimer = Timer()
+
+        val logins = utilities.getLogins().toMutableList()
+        val adapter = LoginsAdapter(logins)
+
+        loginsRecycler.layoutManager = LinearLayoutManager(this@MainActivity)
+        loginsRecycler.adapter = adapter
+        loginsRecycler.invalidate()
+        loginsRecycler.refreshDrawableState()
+        loginsRecycler.scheduleLayoutAnimation()
+        loginsRecycler.setItemViewCacheSize(vault.size)
+
     }
 
     var activated = false
@@ -220,24 +230,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun start2faTimer () {
-        thread {
-            mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
-                override fun run() {
-                    val currentSecond = SimpleDateFormat("s", Locale.getDefault()).format(Date()).toInt()
-                    var halfMinuteElapsed = abs((60-currentSecond))
-                    if (halfMinuteElapsed >= 30) halfMinuteElapsed -= 30
-                    try {
+        mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                val currentSecond = SimpleDateFormat("s", Locale.getDefault()).format(Date()).toInt()
+                var halfMinuteElapsed = abs((60-currentSecond))
+                if (halfMinuteElapsed >= 30) halfMinuteElapsed -= 30
+                try {
+                    roundTimeLeft.progress = halfMinuteElapsed
+                    squareTimeLeft.progress = halfMinuteElapsed
+                } catch (_: Exception) {
+                    runOnUiThread {
                         roundTimeLeft.progress = halfMinuteElapsed
                         squareTimeLeft.progress = halfMinuteElapsed
-                    } catch (_: Exception) {
-                        runOnUiThread {
-                            roundTimeLeft.progress = halfMinuteElapsed
-                            squareTimeLeft.progress = halfMinuteElapsed
-                        }
                     }
-                    }
-            }, 0, 1000) // 1000 milliseconds = 1 second
-        }
+                }
+                }
+        }, 0, 1000) // 1000 milliseconds = 1 second
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -258,7 +266,7 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread {
                         try {
 
-                            if (utilities.vault.getBoolean(utilities.SETTINGS_24H_CLOCK_ENABLED, false)) {
+                            if (utilities.vault.getBoolean(utilities.SETTINGS_24H_CLOCK_ENABLED, true)) {
                                 clock.text = "$currentHour24:$currentMinute"
                                 if ((currentSecond % 2) == 0) clock.text = "$currentHour24 $currentMinute"
                             } else {
