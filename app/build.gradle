@@ -12,13 +12,13 @@ android {
 
     defaultConfig {
         applicationId 'app.wristkey'
-        minSdk 21
+        minSdk 23
         targetSdkVersion 33  // Play Store requires API29+
         versionCode 2
         versionName "2.2"
 
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "armeabi-v7a"
         }
 
         // A pip requirement specifier, with or without a version number
@@ -26,6 +26,7 @@ android {
             pip {
                 install "protobuf"
             }
+            version "3.11"
         }
 
     }
