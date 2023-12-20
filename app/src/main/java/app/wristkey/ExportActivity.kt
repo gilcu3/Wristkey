@@ -133,7 +133,8 @@ class ExportActivity : AppCompatActivity() {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
@@ -153,7 +154,7 @@ class ExportActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun startClock () {
 
         if (!utilities.vault.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) {

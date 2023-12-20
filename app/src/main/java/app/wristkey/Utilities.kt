@@ -27,7 +27,7 @@ import java.util.*
 import kotlin.math.abs
 
 
-@RequiresApi(Build.VERSION_CODES.M)
+
 class Utilities (context: Context) {
 
     val FILES_REQUEST_CODE = 69
@@ -619,11 +619,16 @@ open class OnSwipeTouchListener(c: Context?) : View.OnTouchListener {
         }
 
         // Determines the fling velocity and then fires the appropriate swipe event accordingly
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
             val result = false
             try {
-                val diffY = e2.y - e1.y
-                val diffX = e2.x - e1.x
+                val diffY = e2.y - e1!!.y
+                val diffX = e2.x - e1!!.x
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) onSwipeRight() else onSwipeLeft()

@@ -5,14 +5,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.audiofx.HapticGenerator
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
@@ -36,7 +34,6 @@ class WristkeyImport : AppCompatActivity() {
     lateinit var importLabel: TextView
     lateinit var description: TextView
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,7 +44,7 @@ class WristkeyImport : AppCompatActivity() {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun initializeUI () {
         setContentView(R.layout.activity_wristkey_import)
         backButton = findViewById (R.id.backButton)
@@ -81,7 +78,7 @@ class WristkeyImport : AppCompatActivity() {
     }
 
     // Function to check and request permission.
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun checkPermission(permission: String, requestCode: Int) {
         if (ContextCompat.checkSelfPermission(this@WristkeyImport, permission) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(this@WristkeyImport, arrayOf(permission), requestCode)
@@ -90,7 +87,7 @@ class WristkeyImport : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == utilities.FILES_REQUEST_CODE) {
@@ -115,12 +112,13 @@ class WristkeyImport : AppCompatActivity() {
         storageHelper.onRestoreInstanceState(savedInstanceState)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         storageHelper.storage.onActivityResult(requestCode, resultCode, data)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun initializeScanUI (fileName: Uri?) {
         setContentView(R.layout.import_loading_screen)
         val importingDescription = findViewById<TextView>(R.id.ImportingDescription)

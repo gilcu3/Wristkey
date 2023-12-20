@@ -6,14 +6,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.google.android.wearable.intent.RemoteIntent
@@ -38,7 +36,7 @@ class AboutActivity : AppCompatActivity() {
     private lateinit var urlLink: TextView
     private lateinit var bitcoinWalletAddress: TextView
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +65,6 @@ class AboutActivity : AppCompatActivity() {
         mfaCodesTimer = Timer()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun startClock () {
 
         if (!utilities.vault.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) {
@@ -81,7 +78,7 @@ class AboutActivity : AppCompatActivity() {
                     val currentHour = SimpleDateFormat("hh", Locale.getDefault()).format(Date())
                     val currentMinute = SimpleDateFormat("mm", Locale.getDefault()).format(Date())
                     val currentSecond = SimpleDateFormat("s", Locale.getDefault()).format(Date()).toInt()
-                    val currentAmPm = SimpleDateFormat("a", Locale.getDefault()).format(Date())
+                    //val currentAmPm = SimpleDateFormat("a", Locale.getDefault()).format(Date())
                     runOnUiThread {
                         try {
 
