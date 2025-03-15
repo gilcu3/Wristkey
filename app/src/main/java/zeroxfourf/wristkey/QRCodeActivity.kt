@@ -38,7 +38,6 @@ class QRCodeActivity : AppCompatActivity() {
 
     lateinit var backButton: Button
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qrcode)
@@ -55,7 +54,6 @@ class QRCodeActivity : AppCompatActivity() {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun setShape () {
         if (
             utilities.db.getBoolean (
@@ -93,11 +91,10 @@ class QRCodeActivity : AppCompatActivity() {
         mfaCodesTimer = Timer()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun startTimer () {
         try {
             var timerDuration = utilities.QR_TIMER_DURATION
-            mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
+            mfaCodesTimer.schedule(object : TimerTask() {
                 override fun run() {
                     if (timerDuration <= 0) {
                         setResult(Activity.RESULT_OK, Intent())
@@ -108,7 +105,6 @@ class QRCodeActivity : AppCompatActivity() {
         } catch (_: IllegalStateException) {}
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeUI () {
         qrCodeRoot = findViewById(R.id.qrCodeRoot)
         qrCode = findViewById(R.id.qrCode)

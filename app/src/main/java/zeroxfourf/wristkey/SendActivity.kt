@@ -139,6 +139,7 @@ class SendActivity : AppCompatActivity() {
         backButton.setOnClickListener { finish() }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == utilities.CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {

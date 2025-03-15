@@ -86,7 +86,7 @@ class ManualEntryActivity : AppCompatActivity() {
         if (!utilities.db.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) clock.visibility = View.GONE
 
         try {
-            mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
+            mfaCodesTimer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread { clock.text = utilities.getTime() }
                 }

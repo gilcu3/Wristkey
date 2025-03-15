@@ -61,7 +61,7 @@ class ReceiveActivity : AppCompatActivity() {
         if (!utilities.db.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) clock.visibility = View.GONE
 
         try {
-            timer.scheduleAtFixedRate(object : TimerTask() {
+            timer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread { clock.text = utilities.getTime() }
                 }
@@ -119,7 +119,7 @@ class ReceiveActivity : AppCompatActivity() {
         receiverServer.start()
 
         val cipherTextListenerTimer = Timer()
-        cipherTextListenerTimer.scheduleAtFixedRate(object : TimerTask() {
+        cipherTextListenerTimer.schedule(object : TimerTask() {
             override fun run() {
                 if (receiverServer.encryptedVault != "" && receiverServer.deviceName != "") {
                     receiverServer.stop()

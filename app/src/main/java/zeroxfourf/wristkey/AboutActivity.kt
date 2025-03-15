@@ -4,17 +4,15 @@ package zeroxfourf.wristkey
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.wearable.intent.RemoteIntent
-import wristkey.BuildConfig
+//import wristkey.BuildConfig
 import wristkey.R
 import java.util.*
 
@@ -34,7 +32,6 @@ class AboutActivity : AppCompatActivity() {
     private lateinit var donateButton: Button
     private lateinit var licenseButton: Button
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +64,7 @@ class AboutActivity : AppCompatActivity() {
         if (!utilities.db.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) clock.visibility = View.GONE
 
         try {
-            mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
+            mfaCodesTimer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread { clock.text = utilities.getTime() }
                 }
@@ -79,7 +76,7 @@ class AboutActivity : AppCompatActivity() {
         clock = findViewById(R.id.clock)
 
         versionText = findViewById(R.id.Version)
-        versionText.text = "v${BuildConfig.VERSION_NAME}"
+        // versionText.text = "v${BuildConfig.VERSION_NAME}"
 
         heart = findViewById(R.id.heart)
         heart.startAnimation(AnimationUtils.loadAnimation(this, R.anim.heartbeat))
@@ -93,7 +90,7 @@ class AboutActivity : AppCompatActivity() {
             try {
                 val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
                 startActivity(browserIntent)
-            } catch (ex: Exception) { }
+            } catch (_: Exception) { }
         }
 
         backButton = findViewById(R.id.backButton)
