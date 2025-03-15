@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Intent
 import android.media.audiofx.HapticGenerator
-import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SnapHelper
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import dev.turingcomplete.kotlinonetimepassword.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -251,23 +249,22 @@ class MainActivity : AppCompatActivity() {
         isTimerRunning = true
 
         // Set circle around screen edge to show appropriate time interval
-        val largestPeriod = logins.maxByOrNull { it.period }?.period ?: 30
+        val largestPeriod = (logins.maxByOrNull { it.period }?.period ?: 30) * 1000
         roundTimeLeft.max = largestPeriod
 
-        timer.scheduleAtFixedRate(object : TimerTask() {
+        timer.schedule(object : TimerTask() {
             override fun run() {
                 isTimerRunning = true
-                val second = utilities.second()
-                val tickerValue = (largestPeriod - (second % largestPeriod)) % largestPeriod
+                val millisecond = Date().time
+                val tickerValue = (largestPeriod - (millisecond % largestPeriod)) % largestPeriod
                 try { // Set ticker progress per seconds here.
-                    roundTimeLeft.progress = tickerValue
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) roundTimeLeft.setProgress(
-                        tickerValue,
+                    roundTimeLeft.setProgress(
+                        tickerValue.toInt(),
                         true
                     )
                 } catch (_: Exception) { }
             }
-        }, 0, 1000) // 1000 milliseconds = 1 second
+        }, 0, 250) // 1000 milliseconds = 1 second
     }
 
     private fun startClock() {
@@ -278,7 +275,7 @@ class MainActivity : AppCompatActivity() {
 
         clock.text = utilities.getTime()
         try {
-            timer.scheduleAtFixedRate(object : TimerTask() {
+            timer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread { clock.text = utilities.getTime() }
                 }
@@ -287,7 +284,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (!(resultCode == RESULT_OK && requestCode == CODE_AUTHENTICATION_VERIFICATION)) {
