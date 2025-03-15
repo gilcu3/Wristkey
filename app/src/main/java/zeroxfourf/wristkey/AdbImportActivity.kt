@@ -5,12 +5,14 @@ import android.content.pm.PackageManager
 import android.media.audiofx.HapticGenerator
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import com.anggrayudi.storage.SimpleStorageHelper
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -22,6 +24,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import wristkey.R
+import java.io.File
 import java.io.InputStream
 import java.util.*
 
@@ -72,10 +75,12 @@ class AdbImportActivity : AppCompatActivity() {
             finish()
         }
 
-        storageHelper.onFileSelected = { _, files ->
-            val path = files[0].uri
-            readData(path)
-        }
+        val path = applicationContext.filesDir.path + "/data.json"
+        val file = File(path)
+
+        // for security better to delete this
+        if (readData(file.toUri()))
+            file.delete()
 
     }
 
@@ -95,7 +100,7 @@ class AdbImportActivity : AppCompatActivity() {
         if (!utilities.db.getBoolean(utilities.SETTINGS_CLOCK_ENABLED, true)) clock.visibility = View.GONE
 
         try {
-            mfaCodesTimer.scheduleAtFixedRate(object : TimerTask() {
+            mfaCodesTimer.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread { clock.text = utilities.getTime() }
                 }
@@ -149,7 +154,7 @@ class AdbImportActivity : AppCompatActivity() {
         }
     }
 
-    private fun readData(fileName: Uri?) {
+    private fun readData(fileName: Uri?): Boolean {
         setContentView(R.layout.import_loading_screen)
 
         clock = findViewById(R.id.clock)
@@ -215,6 +220,7 @@ class AdbImportActivity : AppCompatActivity() {
                             startActivity(Intent(applicationContext, MainActivity::class.java))
                         }
                     }
+
                 } catch (noDirectory: NullPointerException) {
                     withContext(Dispatchers.Main) { setNegative("Couldn't access file.") }
                 } catch (invalidFile: JSONException) {
@@ -223,7 +229,9 @@ class AdbImportActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) { setNegative("No data found in file. It may be corrupt or may have no 2FA secrets in it.") }
                 }
             }
+            return true
         }
+        return false
 
     }
 
