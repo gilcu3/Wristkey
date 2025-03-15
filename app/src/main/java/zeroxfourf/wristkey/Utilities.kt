@@ -855,12 +855,12 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
 
                 code.visibility = View.GONE
 
-                mfaCode = utilities.generateTotp(secret=item.secret, algorithm=item.algorithm, digits=item.digits, period=item.period)
-                mfaCode = "${mfaCode.substring(0, mfaCode.length / 2)} ${mfaCode.substring(mfaCode.length / 2)}"
-
-                code.text = mfaCode
-
                 loginInfo.setOnClickListener {
+                    mfaCode = utilities.generateTotp(secret=item.secret, algorithm=item.algorithm, digits=item.digits, period=item.period)
+                    mfaCode = "${mfaCode.substring(0, mfaCode.length / 2)} ${mfaCode.substring(mfaCode.length / 2)}"
+
+                    code.text = mfaCode
+
                     clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), mfaCode.replace(" ", "")))
 
                     Handler().postDelayed({
@@ -904,12 +904,14 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
 
                 code.visibility = View.VISIBLE
 
-                mfaCode = utilities.generateTotp(secret=item.secret, algorithm=item.algorithm, digits=item.digits, period=item.period)
-                mfaCode = "${mfaCode.substring(0, mfaCode.length / 2)} ${mfaCode.substring(mfaCode.length / 2)}"
 
-                code.text = mfaCode
 
-                loginInfo.setOnClickListener { clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), mfaCode.replace(" ", ""))) }
+                loginInfo.setOnClickListener {
+                    mfaCode = utilities.generateTotp(secret=item.secret, algorithm=item.algorithm, digits=item.digits, period=item.period)
+                    mfaCode = "${mfaCode.substring(0, mfaCode.length / 2)} ${mfaCode.substring(mfaCode.length / 2)}"
+                    code.text = mfaCode
+                    clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), mfaCode.replace(" ", "")))
+                }
 
             }
 
