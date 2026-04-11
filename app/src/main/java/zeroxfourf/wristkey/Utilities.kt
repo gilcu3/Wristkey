@@ -656,32 +656,24 @@ class ItemTouchHelperCallback(private val adapter: ItemTouchHelperAdapter, val l
         val toPosition = target.absoluteAdapterPosition
 
         Collections.swap(loginsList, fromPosition, toPosition)
-
-        var data = utilities.objectMapper.writeValueAsString (
-            Utilities.WristkeyFileSystem(
-                mutableListOf()
-            )
-        )
-
-        val dataStore =
-            utilities.objectMapper.readValue (
-                utilities.db.getString(utilities.DATA_STORE, data),
-                Utilities.WristkeyFileSystem::class.java
-            )
-
-        val encodedLogins = mutableListOf<String>()
-        for (login in loginsList) encodedLogins.add(utilities.encodeOtpAuthURL(login))
-
-        dataStore.otpauth = encodedLogins
-        val newData = utilities.objectMapper.writeValueAsString(dataStore)
-        utilities.db.edit().putString(utilities.DATA_STORE, newData).apply()
-
         recyclerView.adapter?.notifyItemMoved(fromPosition, toPosition)
 
         val scrollY = recyclerView.computeVerticalScrollOffset()
         if (viewHolder.absoluteAdapterPosition == 0 && scrollY > 0) recyclerView.smoothScrollBy(0, -1)
 
         return true
+    }
+
+    override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+        super.clearView(recyclerView, viewHolder)
+        // Save reordered data once after drag completes
+        val emptyData = utilities.objectMapper.writeValueAsString(Utilities.WristkeyFileSystem(mutableListOf()))
+        val dataStore = utilities.objectMapper.readValue(
+            utilities.db.getString(utilities.DATA_STORE, emptyData),
+            Utilities.WristkeyFileSystem::class.java
+        )
+        dataStore.otpauth = loginsList.map { utilities.encodeOtpAuthURL(it) }.toMutableList()
+        utilities.db.edit().putString(utilities.DATA_STORE, utilities.objectMapper.writeValueAsString(dataStore)).apply()
     }
 
     private var swipedItemViewHolder: RecyclerView.ViewHolder? = null
@@ -737,6 +729,9 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
     lateinit var context: Context
     lateinit var utilities: Utilities
     lateinit var clipboard: ClipboardManager
+    private var compactDevice: Boolean = false
+    private var compactInitialized = false
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(wristkey.R.layout.login_card, parent, false)
 
@@ -746,12 +741,24 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
             clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         }
 
+        if (!compactInitialized) {
+            val width = utilities.screenResolution(context).first
+            compactDevice = width < 640
+            compactDevice = utilities.db.getBoolean(utilities.SETTINGS_COMPACT_ENABLED, compactDevice)
+            compactInitialized = true
+        }
+
         return ViewHolder(itemView)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = data[position]
         holder.bind(item)
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        super.onViewRecycled(holder)
+        holder.cancelTimer()
     }
 
     override fun getItemCount(): Int {
@@ -777,7 +784,6 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // move unnecessary crap out of here and only update the text
         private val code: TextView = itemView.findViewById(wristkey.R.id.code)
         private val issuer: TextView = itemView.findViewById(wristkey.R.id.issuer)
         private val accountAndLabel: TextView = itemView.findViewById(wristkey.R.id.accountAndLabel)
@@ -786,16 +792,16 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
         private val progressIndicator: ProgressBar = itemView.findViewById(wristkey.R.id.progressIndicator)
         private val accountIcon: TextView = itemView.findViewById(wristkey.R.id.accountIcon)
         private val plus: ImageView = itemView.findViewById(wristkey.R.id.plus)
+        private var timerTask: TimerTask? = null
+
+        fun cancelTimer() {
+            timerTask?.cancel()
+            timerTask = null
+        }
         private val minus: ImageView = itemView.findViewById(wristkey.R.id.minus)
 
         fun bind(item: Utilities.MfaCode) {
-
-            var compactDevice = false
-            val width = utilities.screenResolution(context).first
-            if (width < 640) compactDevice = true
-            compactDevice = utilities.db.getBoolean(utilities.SETTINGS_COMPACT_ENABLED, compactDevice)
-
-            Log.d("WK-LOG", compactDevice.toString())
+            cancelTimer()
 
             lateinit var mfaCode: String
 
@@ -886,7 +892,7 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
                     }
                 } else accountIcon.visibility = View.INVISIBLE
 
-                timer.scheduleAtFixedRate(object : TimerTask() {
+                timerTask = object : TimerTask() {
                     override fun run() {
                         val second = utilities.second()
                         val tickerValue = (item.period - (second % item.period)) % item.period
@@ -908,7 +914,8 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
                         }
 
                     }
-                }, 0, 1000)
+                }
+                timer.scheduleAtFixedRate(timerTask, 0, 1000)
             }
 
             // Counter mode

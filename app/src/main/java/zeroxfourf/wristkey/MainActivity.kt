@@ -272,7 +272,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 } catch (_: Exception) { }
             }
-        }, 0, 250) // 1000 milliseconds = 1 second
+        }, 0, 1000)
     }
 
     private fun startClock() {
