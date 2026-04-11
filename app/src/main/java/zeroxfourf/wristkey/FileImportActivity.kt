@@ -135,11 +135,13 @@ class FileImportActivity : AppCompatActivity() {
             })
         }
 
+        val backIcon = getDrawable(R.drawable.ic_prev)!!.mutate()
+        backIcon.setTint(android.graphics.Color.WHITE)
         val backBtn = Button(this, null, 0, R.style.Wristkey_Button).apply {
             text = "Back"
             setPadding(hPad, vPad, hPad, vPad)
-            setBackgroundResource(R.drawable.pill_shape_simple)
-            setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.ic_prev), null, null, null)
+            setCompoundDrawablesWithIntrinsicBounds(backIcon, null, null, null)
+            compoundDrawablePadding = (8 * resources.displayMetrics.density).toInt()
             setOnClickListener { finish() }
         }
         container.addView(backBtn, LinearLayout.LayoutParams(

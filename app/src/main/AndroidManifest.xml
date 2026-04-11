@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-
     <uses-feature android:name="android.hardware.type.watch" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false"/>
-
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
-        android:networkSecurityConfig="@xml/network"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -33,16 +19,8 @@
             android:value="true" />
 
         <activity
-            android:name="zeroxfourf.wristkey.QRScannerActivity"
-            android:label="@string/title_activity_bitwarden_jsonimport" />
-
-        <activity
             android:name="zeroxfourf.wristkey.FileImportActivity"
             android:label="@string/title_activity_file_import" />
-
-        <activity
-            android:name="zeroxfourf.wristkey.AdbImportActivity"
-            android:label="@string/title_activity_adb_import" />
 
         <activity
             android:name="zeroxfourf.wristkey.MainActivity"
@@ -55,31 +33,12 @@
 
         </activity>
         <activity
-            android:name="zeroxfourf.wristkey.QRCodeActivity"
-            android:label="QR code" />
-        <activity
             android:name="zeroxfourf.wristkey.AddActivity"
             android:label="Add account" />
 
-        <activity
-            android:name="zeroxfourf.wristkey.WiFiTransferActivity"
-            android:label="Wi-Fi transfer"
-            android:exported="true" />
-
-        <activity
-            android:name="zeroxfourf.wristkey.SendActivity"
-            android:label="Send" />
-
-        <activity
-            android:name="zeroxfourf.wristkey.ReceiveActivity"
-            android:label="Receive" />
 
         <activity
             android:name="zeroxfourf.wristkey.ManualEntryActivity"
-            android:label="Add account" />
-
-        <activity
-            android:name="zeroxfourf.wristkey.ExportActivity"
             android:label="Add account" />
 
         <activity

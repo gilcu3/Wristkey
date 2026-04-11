@@ -8,14 +8,13 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.AudioManager
 import android.media.ToneGenerator
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
+
+
 import android.os.Handler
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -30,8 +29,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidmads.library.qrgenearator.QRGContents
-import androidmads.library.qrgenearator.QRGEncoder
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -41,17 +39,15 @@ import androidx.security.crypto.MasterKey
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.zxing.*
-import com.google.zxing.common.HybridBinarizer
-import com.goterl.lazysodium.LazySodiumAndroid
-import com.goterl.lazysodium.SodiumAndroid
+
+
 import dev.turingcomplete.kotlinonetimepassword.GoogleAuthenticator
 import dev.turingcomplete.kotlinonetimepassword.HmacAlgorithm
 import dev.turingcomplete.kotlinonetimepassword.HmacOneTimePasswordConfig
 import dev.turingcomplete.kotlinonetimepassword.HmacOneTimePasswordGenerator
 import dev.turingcomplete.kotlinonetimepassword.TimeBasedOneTimePasswordConfig
 import dev.turingcomplete.kotlinonetimepassword.TimeBasedOneTimePasswordGenerator
-import fi.iki.elonen.NanoHTTPD
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -167,61 +163,6 @@ class Utilities (context: Context) {
         val label: String,
     )
 
-    fun deviceName () : String {
-        return "${Build.MANUFACTURER.toTitleCase()} ${Build.MODEL}"
-    }
-
-    fun String.toTitleCase(): String = this.split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-
-    fun isIp (string: String): Boolean {
-        if (string.contains("0.0.") || string.contains("10.0.")) return false
-        return """^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$""".toRegex().matches(string)
-    }
-    fun hasCamera(): Boolean {
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
-    }
-    fun generateQrCode (qrData: String, windowManager: WindowManager): Bitmap? {
-        val bounds = windowManager.currentWindowMetrics.bounds
-        val width: Int = bounds.width() + 150
-        val height: Int = bounds.height() + 150
-        val dimensions = if (width < height) width else height
-
-        val qrEncoder = QRGEncoder(qrData, null, QRGContents.Type.TEXT, dimensions)
-        return qrEncoder.bitmap
-    }
-    fun wiFiExists(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-    }
-
-    fun scanQRImage(bMap: Bitmap): String {
-        var contents: String
-        val intArray = IntArray(bMap.width * bMap.height)
-        //copy pixel data from the Bitmap into the 'intArray' array
-        bMap.getPixels(intArray, 0, bMap.width, 0, 0, bMap.width, bMap.height)
-        val source: LuminanceSource = RGBLuminanceSource(bMap.width, bMap.height, intArray)
-        val bitmap = BinaryBitmap(HybridBinarizer(source))
-        val reader: Reader = MultiFormatReader()
-
-        contents = try {
-            val result = reader.decode(bitmap)
-            result.text
-        } catch (e: Exception) {
-            "No data found"
-        }
-
-        return contents
-    }
-
-    fun wfsToHashmap(jsonObject: JSONObject): Map<String, Any> {
-        val map: MutableMap<String, String> = HashMap()
-        for (key in jsonObject.keys()) {
-            map[key] = jsonObject[key] as String
-        }
-        return map
-    }
-
     fun bitwardenToWristkey (jsonObject: JSONObject): MutableList<MfaCode> {
 
         val logins = mutableListOf<MfaCode>()
@@ -298,9 +239,6 @@ class Utilities (context: Context) {
 
     }
 
-    fun isWearOsDevice(): Boolean {
-        return context.packageManager.hasSystemFeature("android.hardware.type.watch")
-    }
 
     fun andOtpToWristkey (jsonArray: JSONArray): MutableList<MfaCode> {
 
@@ -633,23 +571,6 @@ class Utilities (context: Context) {
         return Pair(bounds.width(), bounds.height())
     }
 
-    fun getLocalIpAddress(context: Context): String? {
-        try {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val network = connectivityManager.activeNetwork ?: return null
-            val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
-            for (address in linkProperties.linkAddresses) {
-                val hostAddress = address.address.hostAddress ?: continue
-                if (!address.address.isLoopbackAddress && hostAddress.contains('.')) {
-                    return hostAddress
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("IP Address", "Error getting IP address: ${e.message}")
-        }
-        return null
-    }
-
     fun generateTotp (secret: String, algorithm: String, digits: Int, period: Int): String {
         lateinit var _algorithm: HmacAlgorithm
         when (algorithm) {
@@ -696,18 +617,6 @@ class Utilities (context: Context) {
 
 }
 
-class Cryptography () {
-    val sodium = SodiumAndroid()
-    val lazySodium = LazySodiumAndroid(sodium, StandardCharsets.UTF_8)
-    fun encrypt(data: String, publicKey: com.goterl.lazysodium.utils.Key): String {
-        //val keypair = lazySodium.cryptoKxKeypair()
-        //val publicKey = keypair.publicKey
-        return lazySodium.cryptoBoxSealEasy(data, publicKey)
-    }
-    fun decrypt (data: String, keypair: com.goterl.lazysodium.utils.KeyPair): String {
-        return lazySodium.cryptoBoxSealOpenEasy(data, keypair)
-    }
-}
 
 interface ItemTouchHelperAdapter {
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean
@@ -1077,27 +986,3 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
     }
 }
 
-class Server(port: Int, val responseString: String) : NanoHTTPD(port) {
-    var encryptedVault: String = ""
-    var deviceName: String = ""
-    override fun serve(session: NanoHTTPD.IHTTPSession): Response {
-        if (session.method == Method.POST) {
-            val files = HashMap<String, String>()
-            try {
-                session.parseBody(files)
-            } catch (ioe: IOException) {
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Internal Error")
-            } catch (re: ResponseException) {
-                return newFixedLengthResponse(re.status, MIME_PLAINTEXT, re.message)
-            }
-            val data = files["postData"] ?: "No POST body received"
-            // Log.d("Wristkey-Transfer Log", data)
-            if (data.contains("encryptedVault")) {
-                encryptedVault = JSONObject(data)["encryptedVault"] as String
-                deviceName = JSONObject(data)["deviceName"] as String
-            }
-            return newFixedLengthResponse(Response.Status.OK, "text/plain", responseString)
-        }
-        return newFixedLengthResponse("This server only handles POST requests.")
-    }
-}
