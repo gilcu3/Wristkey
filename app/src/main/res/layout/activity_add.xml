@@ -72,12 +72,6 @@
                 android:text="Import from file"
                 app:icon="@drawable/ic_outline_insert_drive_file_24" />
 
-            <Button
-                android:id="@+id/adbTransfer"
-                style="@style/Wristkey.Button"
-                app:icon="@drawable/baseline_usb_24"
-                android:text="Import via ADB" />
-
             <View
                 android:layout_width="0dp"
                 android:layout_height="15dp"

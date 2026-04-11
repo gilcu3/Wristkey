@@ -73,6 +73,12 @@
                 android:layout_height="15dp"
                 android:layout_gravity="center_horizontal" />
 
+            <LinearLayout
+                android:id="@+id/buttonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
             <Button
                 android:id="@+id/doneButton"
                 style="@style/Wristkey.Button"

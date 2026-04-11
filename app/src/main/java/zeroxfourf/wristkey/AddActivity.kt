@@ -42,7 +42,6 @@ class AddActivity : AppCompatActivity() {
     private lateinit var manualEntry: Button
     private lateinit var wifiTransfer: Button
     private lateinit var fileImport: Button
-    private lateinit var adbImport: Button
     private lateinit var scanQRCode: Button
 
     private lateinit var backButton: Button
@@ -125,8 +124,6 @@ class AddActivity : AppCompatActivity() {
         wifiTransfer = findViewById (R.id.wifiTransfer)
         scanQRCode = findViewById (R.id.scanQrCode)
         fileImport = findViewById (R.id.fileImport)
-        adbImport = findViewById (R.id.adbTransfer)
-
         backButton = findViewById (R.id.backButton)
 
         manualEntry.setOnClickListener {
@@ -160,11 +157,6 @@ class AddActivity : AppCompatActivity() {
 
         fileImport.setOnClickListener {
             startActivity(Intent(applicationContext, FileImportActivity::class.java))
-            finish()
-        }
-
-        adbImport.setOnClickListener {
-            startActivity(Intent(applicationContext, AdbImportActivity::class.java))
             finish()
         }
 
