@@ -416,6 +416,71 @@ class Utilities (context: Context) {
 
     }
 
+    fun isEncryptedAegisVault(json: JSONObject): Boolean {
+        return json.has("header") && json.has("db") && json.optJSONObject("header")?.has("slots") == true
+    }
+
+    fun decryptAegisVault(jsonString: String, password: String): JSONObject {
+        val data = JSONObject(jsonString)
+        val header = data.getJSONObject("header")
+        val slots = header.getJSONArray("slots")
+
+        var masterKey: ByteArray? = null
+
+        for (i in 0 until slots.length()) {
+            val slot = slots.getJSONObject(i)
+            if (slot.getInt("type") != 1) continue
+
+            val salt = hexToBytes(slot.getString("salt"))
+            val n = slot.getInt("n")
+            val r = slot.getInt("r")
+            val p = slot.getInt("p")
+
+            // Derive key from password using scrypt
+            val derived = org.bouncycastle.crypto.generators.SCrypt.generate(
+                password.toByteArray(Charsets.UTF_8), salt, n, r, p, 32
+            )
+
+            // Try to decrypt the master key
+            val keyParams = slot.getJSONObject("key_params")
+            val nonce = hexToBytes(keyParams.getString("nonce"))
+            val ciphertext = hexToBytes(slot.getString("key"))
+            val tag = hexToBytes(keyParams.getString("tag"))
+
+            try {
+                masterKey = aesGcmDecrypt(derived, nonce, ciphertext, tag)
+                break
+            } catch (_: Exception) {
+                // Wrong password for this slot, try next
+            }
+        }
+
+        if (masterKey == null) throw IllegalArgumentException("Wrong password")
+
+        // Decrypt the database
+        val dbEncoded = data.getString("db")
+        val dbCiphertext = android.util.Base64.decode(dbEncoded, android.util.Base64.DEFAULT)
+        val params = header.getJSONObject("params")
+        val dbNonce = hexToBytes(params.getString("nonce"))
+        val dbTag = hexToBytes(params.getString("tag"))
+
+        val dbPlain = aesGcmDecrypt(masterKey, dbNonce, dbCiphertext, dbTag)
+        return JSONObject(String(dbPlain, Charsets.UTF_8))
+    }
+
+    private fun aesGcmDecrypt(key: ByteArray, nonce: ByteArray, ciphertext: ByteArray, tag: ByteArray): ByteArray {
+        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+        val spec = javax.crypto.spec.GCMParameterSpec(128, nonce)
+        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, javax.crypto.spec.SecretKeySpec(key, "AES"), spec)
+        // GCM expects ciphertext + tag concatenated
+        val input = ciphertext + tag
+        return cipher.doFinal(input)
+    }
+
+    private fun hexToBytes(hex: String): ByteArray {
+        return ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+    }
+
     fun getTime(): String {
         val hourType = if (android.text.format.DateFormat.is24HourFormat(context)) "HH" else "hh"
         val currentHour = SimpleDateFormat(hourType, Locale.getDefault()).format(Date())

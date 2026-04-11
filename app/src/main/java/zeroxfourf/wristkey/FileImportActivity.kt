@@ -221,25 +221,21 @@ class FileImportActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val fileData = file.readText()
+
+                // Check if this is an encrypted Aegis vault
+                try {
+                    val json = JSONObject(fileData)
+                    if (utilities.isEncryptedAegisVault(json)) {
+                        withContext(Dispatchers.Main) { promptForPassword(file, title, description, progress, progressRound, doneButton) }
+                        return@launch
+                    }
+                } catch (_: JSONException) { }
+
                 try { logins.addAll(utilities.bitwardenToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
                 try { logins.addAll(utilities.aegisToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
                 try { logins.addAll(utilities.andOtpToWristkey(JSONArray(fileData))) } catch (_: Exception) { }
                 if (logins.isEmpty()) throw NoSuchFieldException()
-                withContext(Dispatchers.Main) {
-                    title.text = "Import from file"
-                    description.text = "Imported ${logins.size} account(s)!"
-                    description.append("\n\n")
-                    for ((index, login) in logins.withIndex()) description.append("${if (index != 0) " ⋅ " else ""}${login.issuer}")
-                    progress.visibility = View.GONE
-                    progressRound.visibility = View.GONE
-                    doneButton.visibility = View.VISIBLE
-                    doneButton.setCompoundDrawablesWithIntrinsicBounds (getDrawable(R.drawable.outline_save_24)!!, null, null, null)
-                    doneButton.setOnClickListener {
-                        logins.forEach { utilities.overwriteLogin(utilities.encodeOtpAuthURL(it)) }
-                        finishAffinity()
-                        startActivity(Intent(applicationContext, MainActivity::class.java))
-                    }
-                }
+                withContext(Dispatchers.Main) { showImportResult(logins, title, description, progress, progressRound, doneButton) }
             } catch (noDirectory: NullPointerException) {
                 withContext(Dispatchers.Main) { setNegative("Couldn't access file.") }
             } catch (invalidFile: JSONException) {
@@ -249,6 +245,109 @@ class FileImportActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    private fun showImportResult(
+        logins: List<Utilities.MfaCode>,
+        title: TextView, description: TextView,
+        progress: LinearProgressIndicator, progressRound: CircularProgressIndicator,
+        doneButton: Button
+    ) {
+        title.text = "Import from file"
+        description.text = "Imported ${logins.size} account(s)!"
+        description.append("\n\n")
+        for ((index, login) in logins.withIndex()) description.append("${if (index != 0) " ⋅ " else ""}${login.issuer}")
+        progress.visibility = View.GONE
+        progressRound.visibility = View.GONE
+        doneButton.visibility = View.VISIBLE
+        doneButton.text = "Save"
+        doneButton.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.outline_save_24)!!, null, null, null)
+        doneButton.setOnClickListener {
+            logins.forEach { utilities.overwriteLogin(utilities.encodeOtpAuthURL(it)) }
+            finishAffinity()
+            startActivity(Intent(applicationContext, MainActivity::class.java))
+        }
+    }
+
+    private fun promptForPassword(
+        file: File,
+        title: TextView, description: TextView,
+        progress: LinearProgressIndicator, progressRound: CircularProgressIndicator,
+        doneButton: Button
+    ) {
+        progress.visibility = View.GONE
+        progressRound.visibility = View.GONE
+        title.text = "Encrypted vault"
+        description.text = "Enter your Aegis password:"
+
+        val container = findViewById<LinearLayout>(R.id.buttonContainer)
+        val passwordInput = android.widget.EditText(this).apply {
+            hint = "Password"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setTextColor(android.graphics.Color.WHITE)
+            setHintTextColor(android.graphics.Color.GRAY)
+            gravity = android.view.Gravity.CENTER
+            setPadding(
+                (16 * resources.displayMetrics.density).toInt(),
+                (10 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt(),
+                (10 * resources.displayMetrics.density).toInt()
+            )
+        }
+        container.addView(passwordInput)
+
+        val spacing = (5 * resources.displayMetrics.density).toInt()
+        val hPad = (16 * resources.displayMetrics.density).toInt()
+        val vPad = (10 * resources.displayMetrics.density).toInt()
+
+        doneButton.visibility = View.VISIBLE
+        doneButton.text = "Decrypt"
+        doneButton.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+        doneButton.setOnClickListener {
+            val password = passwordInput.text.toString()
+            if (password.isEmpty()) {
+                Toast.makeText(this, "Please enter a password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            doneButton.visibility = View.GONE
+            passwordInput.visibility = View.GONE
+            description.text = "Decrypting..."
+            progress.visibility = if (isRound) View.GONE else View.VISIBLE
+            progressRound.visibility = if (isRound) View.VISIBLE else View.GONE
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val fileData = file.readText()
+                    val decryptedDb = utilities.decryptAegisVault(fileData, password)
+                    val wrapped = JSONObject().put("db", decryptedDb)
+                    val logins = utilities.aegisToWristkey(wrapped)
+                    if (logins.isEmpty()) throw NoSuchFieldException()
+                    withContext(Dispatchers.Main) { showImportResult(logins, title, description, progress, progressRound, doneButton) }
+                } catch (e: IllegalArgumentException) {
+                    withContext(Dispatchers.Main) {
+                        description.text = "Wrong password. Try again:"
+                        progress.visibility = View.GONE
+                        progressRound.visibility = View.GONE
+                        passwordInput.visibility = View.VISIBLE
+                        passwordInput.text.clear()
+                        doneButton.visibility = View.VISIBLE
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("FileImport", "Decrypt failed", e)
+                    withContext(Dispatchers.Main) {
+                        title.text = "Error"
+                        description.text = "Failed to decrypt vault: ${e.javaClass.simpleName}: ${e.message}"
+                        progress.visibility = View.GONE
+                        progressRound.visibility = View.GONE
+                        doneButton.visibility = View.VISIBLE
+                        doneButton.text = "Go back"
+                        doneButton.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.ic_prev)!!, null, null, null)
+                        doneButton.setOnClickListener { finish() }
+                    }
+                }
+            }
+        }
     }
 
 }

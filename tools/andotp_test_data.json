@@ -1,0 +1,52 @@
+[
+  {
+    "secret": "JBSWY3DPEHPK3PXP",
+    "issuer": "Google",
+    "label": "alice@gmail.com",
+    "algorithm": "SHA1",
+    "digits": 6,
+    "period": 30,
+    "type": "totp",
+    "used_frequency": 0
+  },
+  {
+    "secret": "KRMVATZTJFZUC4TSNBHEY3LJMR",
+    "issuer": "GitHub",
+    "label": "dev_user",
+    "algorithm": "SHA1",
+    "digits": 6,
+    "period": 30,
+    "type": "totp",
+    "used_frequency": 0
+  },
+  {
+    "secret": "GEZDGNBVGY3TQOJQ",
+    "issuer": "AWS",
+    "label": "admin@company.io",
+    "algorithm": "SHA256",
+    "digits": 6,
+    "period": 30,
+    "type": "totp",
+    "used_frequency": 0
+  },
+  {
+    "secret": "NBSWY3DPEB3W64TMMQQQ",
+    "issuer": "Slack",
+    "label": "alice@work.com",
+    "algorithm": "SHA1",
+    "digits": 6,
+    "period": 30,
+    "type": "totp",
+    "used_frequency": 0
+  },
+  {
+    "secret": "MFQWCYLBMFQWCYLB",
+    "issuer": "Discord",
+    "label": "gamer42",
+    "algorithm": "SHA1",
+    "digits": 6,
+    "period": 30,
+    "type": "totp",
+    "used_frequency": 0
+  }
+]
