@@ -32,11 +32,23 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+            if (isReleaseBuild) {
+                storeFile = file(project.findProperty('RELEASE_STORE_FILE') ?: System.getenv('RELEASE_STORE_FILE') ?: '')
+                keyAlias = project.findProperty('RELEASE_KEY_ALIAS') ?: System.getenv('RELEASE_KEY_ALIAS') ?: ''
+                storePassword = System.getenv('RELEASE_STORE_PASSWORD') ?: ''
+                keyPassword = System.getenv('RELEASE_KEY_PASSWORD') ?: ''
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
         }
     }
     compileOptions {
