@@ -243,20 +243,6 @@ class ManualEntryActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (accountInput.length() <= 2) {
-
-                CustomFullscreenDialogFragment(
-                    title = "Invalid Account",
-                    message = getString(R.string.account_empty),
-                    positiveButtonText = null,
-                    positiveButtonIcon = null,
-                    negativeButtonText = "Go back",
-                    negativeButtonIcon = getDrawable(R.drawable.ic_prev)!!,
-                ).show(supportFragmentManager, "CustomFullscreenDialog")
-
-                return@setOnClickListener
-            }
-
             if (secretInput.length() <= 7) {
 
                 CustomFullscreenDialogFragment(

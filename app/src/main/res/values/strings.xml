@@ -3,43 +3,12 @@
 
     <string name="about_app">A secure cross-platform 2FA client.</string>
     <string name="donation_message">Your donations help me maintain my projects.\n\nTap on the button below to visit my donation page. If your watch has a browser, it may open in the watch browser.</string>
-    <string name="bitwarden_import_blurb">To import secrets from Bitwarden, export an unencrypted Bitwarden JSON file and place it in the following directory: </string>
-    <string name="authenticator_import_blurb">Export your accounts and take a picture of the QR code. Make sure it is a JPG/PNG image and place it in the following directory: </string>
-    <string name="otpauth_import_blurb">Take a picture of a QR code, make sure it is a JPG/PNG image and place it in the following directory: </string>
-    <string name="aegis_import_blurb">To import secrets from Aegis Authenticator, export an unencrypted Aegis JSON file and place it in the following directory: </string>
-    <string name="andotp_import_blurb">To import secrets from andOTP, export an unencrypted andOTP JSON file and place it in the following directory: </string>
-    <string name="wristkey_import_blurb">To import secrets from an old backup, place your WFS file in the following directory: </string>
     <string name="file_import_blurb">To import logins from a file, push your unencrypted JSON export to the Download folder:\n\nadb push export.json /sdcard/Download/\n\nThen tap \"Pick file\" below.\n\nThe following services are currently supported:\n⋅ Aegis Authenticator\n⋅ Bitwarden&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;\n⋅ AndOTP&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</string>
-    <string name="adb_import_blurb">To import logins via ADB, make sure you export them in an unencrypted JSON format, and send them to this device via ADB commands. \n\nThe following services are currently supported:\n⋅ Aegis Authenticator\n⋅ Bitwarden&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;\n⋅ AndOTP&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;\n\nRun these commands to send your export file to this device:</string>
-    <string name="adb_commands"><![CDATA[file=<file>\nadb push $file /data/local/tmp/\nadb shell run-as app.wristkey mkdir files/\nadb shell run-as app.wristkey cp /data/local/tmp/$file files/\nadb shell rm /data/local/tmp/$file]]></string>
     <string name="about_url">https://github.com/0x4f53/Wristkey</string>
-    <string name="hello_world">Hello Square World!</string>
-    <string name="title_activity_add">AddActivity</string>
-
-    <string name="use_adb_blurb">You can use the file picker, ADB or a file transfer app for this.</string>
 
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-    <string name="importing">Importing...</string>
-    <string name="bitwarden_import">Bitwarden</string>
-    <string name="aegis_import">Aegis\nAuthenticator</string>
-    <string name="andotp_import">andOTP</string>
-    <string name="wristkey_import">Wristkey\nbackup</string>
-    <string name="import_description">Opening file</string>
-    <string name="authenticator_import">Google\nAuthenticator</string>
-    <string name="otpauth_import">QR Code</string>
-    <string name="title_activity_bitwarden_jsonimport">BitwardenJSONImport</string>
-    <string name="title_activity_wristkey_import">WristkeyImport</string>
-    <string name="title_activity_otpauth_import">OtpAuthImport</string>
-    <string name="title_activity_aegis_jsonimport">AegisJSONImport</string>
     <string name="title_activity_file_import">FileImport</string>
-    <string name="title_activity_adb_import">AdbImport</string>
-    <string name="title_activity_receive_decrypt">ReceiveDecrypt</string>
-    <string name="title_activity_encrypt_send">EncryptSend</string>
-    <string name="title_activity_andotp_import">AndOtpImport</string>
-    <string name="bitcoin_wallet_address">19xgj8XoDMcHSENUDrkW3GtjQjfnbnmWTS</string>
-
-    <string name="message_keyguard">Unlock app</string>
 
     <string name="donation_uri">https://github.com/0x4f53/0x4f53/blob/main/README.md</string>
 
@@ -49,23 +18,9 @@
 \n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </string>
     <string name="settings_label">Settings</string>
-    <string name="wifi_error">Can\'t connect to Wi-Fi network. Go to your device settings and connect to one before continuing.\n\nIf your device doesn\'t support Wi-Fi, try using the ADB transfer method instead.</string>
-    <string name="wifi_connection_request">wants to send you data</string>
     <string name="issuer_empty">Please enter issuer name</string>
     <string name="secret_empty">This secret is too short</string>
-    <string name="account_empty">Please enter username/email</string>
     <string name="go_back">Discard changes and go back?</string>
     <string name="delete">Would you like to delete this item?</string>
     <string name="donate_label">Donate</string>
-    <string name="invalid_qr_code">This QR code is invalid. Please try again.</string>
-    <string name="wifi_transfer_description">Transfer data between two devices, such as a phone and a smartwatch</string>
-    <string name="send_description">With both devices on the same Wi-Fi, open Wristkey on the other device, select the \"Receive\" option and scan the QR code shown below on the other device.</string>
-    <string name="send_description_no_camera">With both devices on the same Wi-Fi, open Wristkey on the other device, select the \"Receive\" option and enter the IP shown.</string>
-    <string name="receive_description">With both devices on the same Wi-Fi, open Wristkey on the other device, select the \"Send\" option and scan this QR code or enter the IP shown.</string>
-    <string name="receive_decrypt">Enter the OTP displayed on the other device to start transfer.</string>
-    <string name="send_encrypt">Enter this OTP on the other device to complete transfer.</string>
-    <string name="forbidden_wifi_transfer">This is a Wristkey Wi-Fi transfer server. It is ephemeral and uses X25519 and AES encryption, no point wasting your time attacking it. 🖕😉</string>
-    <string name="qrCode_content_description_receiver">Scan this QR Code or enter the IP address shown below it.</string>
-
-    <string name="tile_description">View up to 4 2FA codes instantly. To change what tiles appear, open the Wristkey app on your watch and drag to reorder.</string>
 </resources>

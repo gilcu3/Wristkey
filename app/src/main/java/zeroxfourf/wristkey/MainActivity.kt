@@ -203,14 +203,14 @@ class MainActivity : AppCompatActivity() {
         loginsAdapter = LoginsAdapter(logins, timer, isRound, this@MainActivity)
         loginsRecycler.adapter = loginsAdapter
 
-        callback = ItemTouchHelperCallback(loginsAdapter, logins)
-        touchHelper = ItemTouchHelper(callback)
-        touchHelper.attachToRecyclerView(loginsRecycler)
-
         val layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
         val snapHelper: SnapHelper = PagerSnapHelper()
         loginsRecycler.layoutManager = layoutManager
         snapHelper.attachToRecyclerView(loginsRecycler)
+
+        callback = ItemTouchHelperCallback(loginsAdapter, logins)
+        touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(loginsRecycler)
 
         searchLayout = findViewById(R.id.searchLayout)
         searchBox = findViewById(R.id.searchBox)

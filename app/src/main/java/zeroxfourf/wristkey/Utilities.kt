@@ -9,17 +9,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.AudioManager
 import android.media.ToneGenerator
-
-
 import android.os.Handler
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewAnimationUtils
@@ -56,12 +53,10 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import wristkey.R
-import java.io.IOException
-import java.net.InetAddress
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
+
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -522,17 +517,22 @@ class Utilities (context: Context) {
                 WristkeyFileSystem::class.java
             )
 
-        val iterator = dataStore.otpauth.iterator()
+        var insertIndex = dataStore.otpauth.size
+        val iterator = dataStore.otpauth.listIterator()
         while (iterator.hasNext()) {
+            val index = iterator.nextIndex()
             val login = iterator.next()
             try {
                 val loginSecret = decodeOtpAuthURL(login)!!.secret.lowercase().replace(" ", "")
                 val secretToWrite = decodeOtpAuthURL(otpAuthURL)!!.secret.lowercase()
-                if (loginSecret.contains(secretToWrite)) iterator.remove()
+                if (loginSecret.contains(secretToWrite)) {
+                    insertIndex = index
+                    iterator.remove()
+                }
             } catch (_: java.lang.Exception) { }
         }
 
-        dataStore.otpauth.add(otpAuthURL)
+        dataStore.otpauth.add(insertIndex, otpAuthURL)
         data = objectMapper.writeValueAsString(dataStore)
         db.edit().putString(DATA_STORE, data).apply()
 
@@ -591,11 +591,6 @@ class Utilities (context: Context) {
         return TimeBasedOneTimePasswordGenerator(secret.toByteArray(Charset.defaultCharset()), config).generate()
     }
 
-    private fun pixelsToSp(context: Context, px: Float): Float {
-        val fontScale = context.resources.configuration.fontScale
-        val density = context.resources.displayMetrics.density
-        return px / (density * fontScale)
-    }
 
     fun generateHotp (secret: String, algorithm: String, digits: Int, counter: Long): String {
         lateinit var _algorithm: HmacAlgorithm
@@ -650,6 +645,7 @@ class ItemTouchHelperCallback(private val adapter: ItemTouchHelperAdapter, val l
         return true
     }
 
+
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
 
         val fromPosition = viewHolder.absoluteAdapterPosition
@@ -657,9 +653,6 @@ class ItemTouchHelperCallback(private val adapter: ItemTouchHelperAdapter, val l
 
         Collections.swap(loginsList, fromPosition, toPosition)
         recyclerView.adapter?.notifyItemMoved(fromPosition, toPosition)
-
-        val scrollY = recyclerView.computeVerticalScrollOffset()
-        if (viewHolder.absoluteAdapterPosition == 0 && scrollY > 0) recyclerView.smoothScrollBy(0, -1)
 
         return true
     }
@@ -696,6 +689,33 @@ class ItemTouchHelperCallback(private val adapter: ItemTouchHelperAdapter, val l
         if (!::context.isInitialized || !::utilities.isInitialized) {
             context = viewHolder.itemView.context
             utilities = Utilities(context)
+        }
+
+        if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && isCurrentlyActive) {
+            // Find the parent NestedScrollView
+            var parent = recyclerView.parent
+            while (parent != null && parent !is androidx.core.widget.NestedScrollView) {
+                parent = (parent as? android.view.View)?.parent
+            }
+            val scrollView = parent as? androidx.core.widget.NestedScrollView
+            if (scrollView != null) {
+                // Get drag position relative to screen
+                val location = IntArray(2)
+                viewHolder.itemView.getLocationOnScreen(location)
+                val dragCenterOnScreen = location[1] + dY + viewHolder.itemView.height / 2f
+
+                val scrollLocation = IntArray(2)
+                scrollView.getLocationOnScreen(scrollLocation)
+                val scrollTop = scrollLocation[1]
+                val scrollBottom = scrollTop + scrollView.height
+                val edgeZone = scrollView.height * 0.15f
+
+                if (dragCenterOnScreen > scrollBottom - edgeZone) {
+                    scrollView.scrollBy(0, 12)
+                } else if (dragCenterOnScreen < scrollTop + edgeZone) {
+                    scrollView.scrollBy(0, -12)
+                }
+            }
         }
 
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
