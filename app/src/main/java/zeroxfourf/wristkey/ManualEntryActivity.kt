@@ -1,7 +1,6 @@
 package zeroxfourf.wristkey
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.text.method.PasswordTransformationMethod
 import android.view.View
@@ -10,7 +9,6 @@ import android.widget.Button
 import android.widget.CheckedTextView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
@@ -63,7 +61,7 @@ class ManualEntryActivity : AppCompatActivity() {
 
     private lateinit var data: Utilities.MfaCode
 
-    @RequiresApi(Build.VERSION_CODES.N)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manual_entry)
@@ -248,7 +246,7 @@ class ManualEntryActivity : AppCompatActivity() {
             if (accountInput.length() <= 2) {
 
                 CustomFullscreenDialogFragment(
-                    title = "Invalid Issuer",
+                    title = "Invalid Account",
                     message = getString(R.string.account_empty),
                     positiveButtonText = null,
                     positiveButtonIcon = null,
@@ -262,7 +260,7 @@ class ManualEntryActivity : AppCompatActivity() {
             if (secretInput.length() <= 7) {
 
                 CustomFullscreenDialogFragment(
-                    title = "Invalid Issuer",
+                    title = "Invalid Secret",
                     message = getString(R.string.secret_empty),
                     positiveButtonText = null,
                     positiveButtonIcon = null,
@@ -282,7 +280,7 @@ class ManualEntryActivity : AppCompatActivity() {
                 digits = digits,
                 period = validity,
                 lock = false,
-                counter = counterInput.text.toString().toLong(),
+                counter = counterInput.text.toString().toLongOrNull() ?: 0,
                 label = labelInput.text.toString()
             )
 

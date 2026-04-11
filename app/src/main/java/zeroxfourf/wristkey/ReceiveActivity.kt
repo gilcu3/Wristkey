@@ -1,7 +1,6 @@
 package zeroxfourf.wristkey
 import android.content.Intent
 import android.graphics.drawable.BitmapDrawable
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -10,7 +9,6 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.WriterException
 import com.goterl.lazysodium.utils.KeyPair
@@ -41,7 +39,7 @@ class ReceiveActivity : AppCompatActivity() {
     private lateinit var backButton: Button
 
     @OptIn(DelicateCoroutinesApi::class)
-    @RequiresApi(Build.VERSION_CODES.O)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_receive)
@@ -88,7 +86,7 @@ class ReceiveActivity : AppCompatActivity() {
         timer = Timer()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     private fun initializeUI () {
         clock = findViewById(R.id.clock)
 
@@ -98,7 +96,7 @@ class ReceiveActivity : AppCompatActivity() {
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager
 
         try {
-            qrCode.setImageDrawable(BitmapDrawable(utilities.generateQrCode(receiverServerURL, wm)))
+            qrCode.setImageDrawable(BitmapDrawable(resources, utilities.generateQrCode(receiverServerURL, wm)))
         } catch (_: WriterException) { }
         ipAndPort.text = receiverServerURL
 
@@ -125,7 +123,6 @@ class ReceiveActivity : AppCompatActivity() {
                     receiverServer.stop()
                     val decryptedBase64String = cryptography.lazySodium.cryptoBoxSealOpenEasy(receiverServer.encryptedVault, receiverKeyPair)
                     val decryptedVault = utilities.fromBase64(decryptedBase64String)
-                    receiverServer.encryptedVault
                     runOnUiThread {
                         Toast.makeText(this@ReceiveActivity, "Received data from ${receiverServer.deviceName}", Toast.LENGTH_SHORT).show()
                         utilities.db.edit().remove(utilities.DATA_STORE).apply()

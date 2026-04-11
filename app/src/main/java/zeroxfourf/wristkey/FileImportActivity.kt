@@ -186,9 +186,9 @@ class FileImportActivity : AppCompatActivity() {
                 try {
                     file = contentResolver.openInputStream(fileName)!!
                     val fileData = String(file.readBytes())
-                    logins = try { utilities.bitwardenToWristkey(JSONObject(fileData)) } catch (_: Exception) { logins }
-                    logins = try { utilities.aegisToWristkey(JSONObject(fileData)) } catch (_: Exception) { logins }
-                    logins = try { utilities.andOtpToWristkey(JSONArray(fileData)) } catch (_: Exception) { logins }
+                    try { logins.addAll(utilities.bitwardenToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
+                    try { logins.addAll(utilities.aegisToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
+                    try { logins.addAll(utilities.andOtpToWristkey(JSONArray(fileData))) } catch (_: Exception) { }
                     withContext(Dispatchers.IO) { file.close() }
                     if (logins.isEmpty()) throw NoSuchFieldException()
                     withContext(Dispatchers.Main) {

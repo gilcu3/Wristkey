@@ -1,6 +1,5 @@
 package zeroxfourf.wristkey
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.HapticFeedbackConstants
@@ -8,7 +7,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import wristkey.R
@@ -30,10 +29,22 @@ class ExportActivity : AppCompatActivity() {
 
     private lateinit var backButton: CardView
 
-    private lateinit var logins: List<Utilities.MfaCode>
+    private var logins: List<Utilities.MfaCode> = emptyList()
     var loginNumber = 0
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    private val qrExportLauncher: androidx.activity.result.ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (logins.size > 2 && loginNumber < logins.size) {
+            val intent = Intent(applicationContext, QRCodeActivity::class.java)
+            intent.putExtra(utilities.INTENT_QR_DATA, utilities.encodeOtpAuthURL(logins[loginNumber]))
+            loginNumber += 1
+            qrExportLauncher.launch(intent)
+        } else {
+            Toast.makeText(applicationContext, "Done!", Toast.LENGTH_SHORT).show()
+            qrExportButton.performHapticFeedback(HapticFeedbackConstants.REJECT)
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_export)
@@ -41,6 +52,9 @@ class ExportActivity : AppCompatActivity() {
 
         utilities = Utilities (applicationContext)
         mfaCodesTimer = Timer()
+
+        val data = utilities.getData()
+        logins = data.otpauth.mapNotNull { utilities.decodeOtpAuthURL(it) }
 
         initializeUI()
         startClock()
@@ -64,7 +78,7 @@ class ExportActivity : AppCompatActivity() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun initializeUI () {
 
         clock = findViewById(R.id.clock)
@@ -89,7 +103,7 @@ class ExportActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun exportViaFile () {
 
         if (logins.isEmpty()) {
@@ -107,7 +121,8 @@ class ExportActivity : AppCompatActivity() {
         Log.d ("Wristkey", "Writing export file to: " + applicationContext.filesDir.toString())
 
         val writer = FileWriter(filename)
-        // writer.write(JSONObject(utilities.getVaultLoginsOnly()).toString(4))
+        val vaultJson = utilities.objectMapper.writeValueAsString(utilities.getData())
+        writer.write(vaultJson)
         writer.flush()
         writer.close()
 
@@ -116,7 +131,7 @@ class ExportActivity : AppCompatActivity() {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun exportViaQrCodes() {
 
         if (logins.isEmpty()) {
@@ -126,31 +141,10 @@ class ExportActivity : AppCompatActivity() {
         }
 
         val intent = Intent (applicationContext, QRCodeActivity::class.java)
-        // intent.putExtra (utilities.INTENT_QR_DATA, utilities.getUuid(logins[loginNumber]))
+        intent.putExtra (utilities.INTENT_QR_DATA, utilities.encodeOtpAuthURL(logins[loginNumber]))
         loginNumber += 1
-        startActivityForResult (intent, utilities.EXPORT_RESPONSE_CODE)
+        qrExportLauncher.launch(intent)
 
-    }
-
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            utilities.EXPORT_RESPONSE_CODE -> {
-                if (logins.size > 2) {
-                    if (loginNumber < logins.size) {
-                        val intent = Intent (applicationContext, QRCodeActivity::class.java)
-                        // intent.putExtra (utilities.INTENT_QR_DATA, utilities.getUuid(logins[loginNumber]))
-                        loginNumber += 1
-                        startActivityForResult (intent, utilities.EXPORT_RESPONSE_CODE)
-                    } else {
-                        Toast.makeText(applicationContext, "Done!", Toast.LENGTH_SHORT).show()
-                        qrExportButton.performHapticFeedback(HapticFeedbackConstants.REJECT)
-                    }
-                }
-            }
-        }
     }
 
 

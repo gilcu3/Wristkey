@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.wearable.intent.RemoteIntent
 //import wristkey.BuildConfig
 import wristkey.R
 import java.util.*
@@ -84,8 +83,6 @@ class AboutActivity : AppCompatActivity() {
         val uri: String = getString(R.string.about_url)
         urlLink = findViewById(R.id.sourceCode)
         urlLink.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE).setData(Uri.parse(uri))
-            RemoteIntent.startRemoteActivity(this, intent, null)
             Toast.makeText(this, "Opening repository URL in browser", Toast.LENGTH_SHORT).show()
             try {
                 val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))

@@ -6,14 +6,12 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.media.audiofx.HapticGenerator
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.zxing.WriterException
@@ -118,7 +116,7 @@ class QRCodeActivity : AppCompatActivity() {
         backButton = findViewById(R.id.backButton)
 
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager
-        try { qrCode.setImageDrawable(BitmapDrawable(utilities.generateQrCode(data, wm))) } catch (_: WriterException) { }
+        try { qrCode.setImageDrawable(BitmapDrawable(resources, utilities.generateQrCode(data, wm))) } catch (_: WriterException) { }
 
         qrCodeSubtitle.text = metadata
 

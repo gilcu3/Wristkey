@@ -1,6 +1,5 @@
 package zeroxfourf.wristkey
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.audiofx.HapticGenerator
@@ -12,6 +11,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -41,6 +41,21 @@ class SendActivity : AppCompatActivity() {
     lateinit var mfaCodesTimer: Timer
     lateinit var utilities: Utilities
     lateinit var cryptography: Cryptography
+
+    private val qrScanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            url = result.data!!.getStringExtra("QR_CODE_SCAN_REQUEST") ?: ""
+            if (utilities.isIp(url.replace("http:", "").replace("/", ""))) {
+                sendPubKeyRequest()
+                scanQrCode.performHapticFeedback(HapticGenerator.SUCCESS)
+            } else {
+                AlertDialog.Builder(this@SendActivity)
+                    .setMessage(R.string.invalid_qr_code)
+                    .setNegativeButton("Go back") { _, _ -> finish() }
+                    .create().show()
+            }
+        }
+    }
 
     private lateinit var clock: TextView
     private lateinit var scanQrCodeDescription: TextView
@@ -139,23 +154,6 @@ class SendActivity : AppCompatActivity() {
         backButton.setOnClickListener { finish() }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == utilities.CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            url = data?.getStringExtra(utilities.QR_CODE_SCAN_REQUEST).toString()
-            if (utilities.isIp(url.replace("http:", "").replace("/", ""))) {
-                sendPubKeyRequest()
-                scanQrCode.performHapticFeedback(HapticGenerator.SUCCESS)
-            } else {
-                AlertDialog.Builder(this@SendActivity)
-                    .setMessage(R.string.invalid_qr_code)
-                    .setNegativeButton("Go back") { _, _ -> finish() }
-                    .create().show()
-            }
-        }
-    }
-
     private fun checkPermission(permission: String, requestCode: Int) {
         if (ContextCompat.checkSelfPermission(this@SendActivity, permission) == PackageManager.PERMISSION_DENIED) ActivityCompat.requestPermissions(this@SendActivity, arrayOf(permission), requestCode)
         else {
@@ -167,7 +165,7 @@ class SendActivity : AppCompatActivity() {
 
     private fun startScannerUI () {
         val intent = Intent (applicationContext, QRScannerActivity::class.java)
-        startActivityForResult(intent, utilities.CAMERA_REQUEST_CODE)
+        qrScanLauncher.launch(intent)
     }
 
     private fun startSendingServer(){
@@ -190,7 +188,7 @@ class SendActivity : AppCompatActivity() {
                 url
             )
             withContext(Dispatchers.Main) { // Switch back to Main Thread to update UI
-                val responseJson = JSONObject(receiverResponse)
+                val responseJson = JSONObject(receiverResponse ?: "{}")
 
                 val deviceName = responseJson["deviceName"]
                 Toast.makeText(this@SendActivity, "Sending to $deviceName", Toast.LENGTH_SHORT).show()

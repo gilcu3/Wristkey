@@ -3,14 +3,13 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -23,6 +22,21 @@ class AddActivity : AppCompatActivity() {
     lateinit var mfaCodesTimer: Timer
     lateinit var utilities: Utilities
 
+    private val qrScanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val scannedData = result.data!!.getStringExtra("QR_CODE_SCAN_REQUEST")
+            if (!scannedData.isNullOrBlank()) {
+                if (scannedData.contains("otpauth://")) {
+                    utilities.overwriteLogin(scannedData)
+                    finishAffinity()
+                    startActivity(Intent(applicationContext, MainActivity::class.java))
+                    return@registerForActivityResult
+                }
+            }
+            Toast.makeText(this@AddActivity, getString(R.string.invalid_qr_code), Toast.LENGTH_LONG).show()
+        }
+    }
+
     private lateinit var clock: TextView
 
     private lateinit var manualEntry: Button
@@ -33,7 +47,7 @@ class AddActivity : AppCompatActivity() {
 
     private lateinit var backButton: Button
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add)
@@ -72,7 +86,7 @@ class AddActivity : AppCompatActivity() {
         mfaCodesTimer = Timer()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == utilities.CAMERA_REQUEST_CODE) {
@@ -86,7 +100,7 @@ class AddActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+
     private fun checkPermission(permission: String, requestCode: Int) {
         if (ContextCompat.checkSelfPermission(this@AddActivity, permission) == PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this@AddActivity, arrayOf(permission), requestCode)
@@ -97,34 +111,9 @@ class AddActivity : AppCompatActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == utilities.CAMERA_REQUEST_CODE+1 && resultCode == RESULT_OK) {
-            if (data != null && data.hasExtra(utilities.QR_CODE_SCAN_REQUEST)) {
-                val scannedData = data.getStringExtra(utilities.QR_CODE_SCAN_REQUEST)
-
-                if (!scannedData.isNullOrBlank()) {
-                    if (scannedData.contains("otpauth://")) {
-                        utilities.overwriteLogin(scannedData)
-                        finishAffinity()
-                        startActivity(Intent(applicationContext, MainActivity::class.java))
-                        return
-                    } else if (scannedData.contains("otpauth-migration://")) {
-
-                    }
-
-                }
-
-                Toast.makeText(this@AddActivity, getString(R.string.invalid_qr_code), Toast.LENGTH_LONG).show()
-
-            }
-        }
-    }
-
     private fun startScannerUI () {
         val intent = Intent(this@AddActivity, QRScannerActivity::class.java)
-        startActivityForResult(intent, utilities.CAMERA_REQUEST_CODE+1)
+        qrScanLauncher.launch(intent)
     }
 
     private fun initializeUI () {

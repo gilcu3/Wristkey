@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.NestedScrollView
 import androidx.core.widget.doAfterTextChanged
@@ -28,9 +29,6 @@ import wristkey.R
 import java.util.*
 import kotlin.math.hypot
 
-
-const val CODE_AUTHENTICATION_VERIFICATION = 241
-
 class MainActivity : AppCompatActivity() {
 
     lateinit var timer: Timer
@@ -38,6 +36,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var utilities: Utilities
     private var isRound: Boolean = false
     private var unlocked: Boolean = false
+
+    private val authLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            initializeUI()
+            unlocked = true
+        } else {
+            finish()
+        }
+    }
 
     private lateinit var scrollView: NestedScrollView
     private lateinit var clock: TextView
@@ -65,8 +72,9 @@ class MainActivity : AppCompatActivity() {
         if (utilities.db.getBoolean(utilities.SETTINGS_LOCK_ENABLED, false)) {
             val lockscreen = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
             if (lockscreen.isKeyguardSecure) {
+                @Suppress("DEPRECATION")
                 val i = lockscreen.createConfirmDeviceCredentialIntent("Wristkey", "App locked")
-                startActivityForResult(i, CODE_AUTHENTICATION_VERIFICATION)
+                authLauncher.launch(i)
             }
         } else initializeUI()
     }
@@ -281,16 +289,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }, 0, 1000)
         } catch (_: IllegalStateException) {
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (!(resultCode == RESULT_OK && requestCode == CODE_AUTHENTICATION_VERIFICATION)) {
-            finish()
-        } else {
-            initializeUI()
-            unlocked = true
         }
     }
 

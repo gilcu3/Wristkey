@@ -3,7 +3,7 @@ package zeroxfourf.wristkey
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.audiofx.HapticGenerator
-import android.net.Uri
+
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,7 +12,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
+
 import com.anggrayudi.storage.SimpleStorageHelper
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -25,7 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import wristkey.R
 import java.io.File
-import java.io.InputStream
+
 import java.util.*
 
 class AdbImportActivity : AppCompatActivity() {
@@ -78,9 +78,7 @@ class AdbImportActivity : AppCompatActivity() {
         val path = applicationContext.filesDir.path + "/data.json"
         val file = File(path)
 
-        // for security better to delete this
-        if (readData(file.toUri()))
-            file.delete()
+        readData(file)
 
     }
 
@@ -148,13 +146,13 @@ class AdbImportActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this@AdbImportActivity, "Please grant Wristkey storage permissions in settings", Toast.LENGTH_LONG).show()
                 val intent = Intent (android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = Uri.parse("package:$packageName")
+                intent.data = android.net.Uri.parse("package:$packageName")
                 startActivity(intent)
             }
         }
     }
 
-    private fun readData(fileName: Uri?): Boolean {
+    private fun readData(fileName: File?): Boolean {
         setContentView(R.layout.import_loading_screen)
 
         clock = findViewById(R.id.clock)
@@ -194,16 +192,15 @@ class AdbImportActivity : AppCompatActivity() {
             doneButton.setOnClickListener { finish() }
         }
 
-        if (fileName != null) {
-            lateinit var file: InputStream
+        if (fileName != null && fileName.exists()) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    file = contentResolver.openInputStream(fileName)!!
-                    val fileData = String(file.readBytes())
-                    logins = try { utilities.bitwardenToWristkey(JSONObject(fileData)) } catch (_: Exception) { logins }
-                    logins = try { utilities.aegisToWristkey(JSONObject(fileData)) } catch (_: Exception) { logins }
-                    logins = try { utilities.andOtpToWristkey(JSONArray(fileData)) } catch (_: Exception) { logins }
-                    withContext(Dispatchers.IO) { file.close() }
+                    val fileData = fileName.readText()
+                    // for security better to delete this
+                    fileName.delete()
+                    try { logins.addAll(utilities.bitwardenToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
+                    try { logins.addAll(utilities.aegisToWristkey(JSONObject(fileData))) } catch (_: Exception) { }
+                    try { logins.addAll(utilities.andOtpToWristkey(JSONArray(fileData))) } catch (_: Exception) { }
                     if (logins.isEmpty()) throw NoSuchFieldException()
                     withContext(Dispatchers.Main) {
                         title.text = "Import from file"

@@ -11,13 +11,10 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Point
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.wifi.WifiInfo
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.security.keystore.KeyGenParameterSpec
@@ -35,7 +32,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -76,7 +72,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.hypot
 
 
-@RequiresApi(Build.VERSION_CODES.M)
 class Utilities (context: Context) {
 
     val FILES_REQUEST_CODE = 69
@@ -176,7 +171,7 @@ class Utilities (context: Context) {
         return "${Build.MANUFACTURER.toTitleCase()} ${Build.MODEL}"
     }
 
-    fun String.toTitleCase(): String = this.split(" ").joinToString(" ") { it.capitalize() }
+    fun String.toTitleCase(): String = this.split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
     fun isIp (string: String): Boolean {
         if (string.contains("0.0.") || string.contains("10.0.")) return false
@@ -186,27 +181,18 @@ class Utilities (context: Context) {
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
     }
     fun generateQrCode (qrData: String, windowManager: WindowManager): Bitmap? {
-        val display = windowManager.defaultDisplay
-        val point = Point()
-        display.getSize(point)
-        val width: Int = point.x + 150
-        val height: Int = point.y + 150
+        val bounds = windowManager.currentWindowMetrics.bounds
+        val width: Int = bounds.width() + 150
+        val height: Int = bounds.height() + 150
         val dimensions = if (width < height) width else height
 
         val qrEncoder = QRGEncoder(qrData, null, QRGContents.Type.TEXT, dimensions)
         return qrEncoder.bitmap
     }
-    @Suppress("DEPRECATION")
     fun wiFiExists(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-            networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-        } else {
-            val networkInfo = connectivityManager.activeNetworkInfo
-            networkInfo != null && networkInfo.type == ConnectivityManager.TYPE_WIFI
-        }
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
     }
 
     fun scanQRImage(bMap: Bitmap): String {
@@ -330,7 +316,7 @@ class Utilities (context: Context) {
             val digits = JSONObject(login)["digits"].toString().toInt()
             val period = JSONObject(login)["period"].toString().toInt()
             var type = JSONObject(login)["type"].toString().lowercase()
-            if (type == "STEAM") type = "totp"
+            if (type == "steam") type = "totp"
             val label = try { JSONObject(login)["label"].toString() } catch (_: JSONException) { "" }
 
             logins.add (
@@ -470,15 +456,15 @@ class Utilities (context: Context) {
 
     fun encodeOtpAuthURL (mfaCodeObject: MfaCode): String {
         // TOTPs: otpauth://totp/Google%20LLC%2E:me%400x4f.in?secret=ASDFGHJKL&issuer=Google&algorithm=SHA1&digits=6&period=30&counter=0&label=Work
-        val issuer: String = URLEncoder.encode(mfaCodeObject.issuer)
-        val account: String = URLEncoder.encode(mfaCodeObject.account)
+        val issuer: String = URLEncoder.encode(mfaCodeObject.issuer, "UTF-8")
+        val account: String = URLEncoder.encode(mfaCodeObject.account, "UTF-8")
         val secret: String = mfaCodeObject.secret.replace(" ", "")
         val digits: String = mfaCodeObject.digits.toString()
         val period: String = mfaCodeObject.period.toString()
         val algorithm: String = mfaCodeObject.algorithm.replace(" ", "").replace("-", "").uppercase()
         val lock: String = mfaCodeObject.lock.toString()
         val counter: String = mfaCodeObject.counter.toString()
-        val label: String = URLEncoder.encode(mfaCodeObject.label)
+        val label: String = URLEncoder.encode(mfaCodeObject.label, "UTF-8")
 
         return if (mfaCodeObject.mode.lowercase().contains(MFA_TIME_MODE)) "otpauth://${mfaCodeObject.mode}/$issuer:$account?secret=$secret&algorithm=$algorithm&digits=$digits&period=$period&lock=$lock&label=$label"
         else "otpauth://${MFA_COUNTER_MODE}/$issuer:$account?secret=$secret&algorithm=$algorithm&digits=$digits&counter=$counter&lock=$lock&label=$label"
@@ -551,7 +537,7 @@ class Utilities (context: Context) {
     }
 
     class WristkeyFileSystem (
-        @JsonProperty("otpauth") var otpauth: MutableList<String>
+        @param:JsonProperty("otpauth") var otpauth: MutableList<String>
     )
 
     fun getData (): WristkeyFileSystem {
@@ -577,32 +563,21 @@ class Utilities (context: Context) {
     }
 
     fun screenResolution(context: Context): Pair<Int, Int> {
-        val metrics = android.util.DisplayMetrics()
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        windowManager.defaultDisplay.getMetrics(metrics)
-
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
-
-        return Pair(width, height)
+        val bounds = windowManager.currentWindowMetrics.bounds
+        return Pair(bounds.width(), bounds.height())
     }
 
     fun getLocalIpAddress(context: Context): String? {
         try {
-            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            val wifiInfo: WifiInfo? = wifiManager.connectionInfo
-
-            if (wifiInfo != null) {
-                val ipAddress = wifiInfo.ipAddress
-                val ipByteArray = byteArrayOf(
-                    (ipAddress and 0xFF).toByte(),
-                    (ipAddress shr 8 and 0xFF).toByte(),
-                    (ipAddress shr 16 and 0xFF).toByte(),
-                    (ipAddress shr 24 and 0xFF).toByte()
-                )
-
-                val inetAddress = InetAddress.getByAddress(ipByteArray)
-                return inetAddress.hostAddress
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork ?: return null
+            val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
+            for (address in linkProperties.linkAddresses) {
+                val hostAddress = address.address.hostAddress ?: continue
+                if (!address.address.isLoopbackAddress && hostAddress.contains('.')) {
+                    return hostAddress
+                }
             }
         } catch (e: Exception) {
             Log.e("IP Address", "Error getting IP address: ${e.message}")
@@ -631,8 +606,9 @@ class Utilities (context: Context) {
     }
 
     private fun pixelsToSp(context: Context, px: Float): Float {
-        val scaledDensity = context.resources.displayMetrics.scaledDensity
-        return px / scaledDensity
+        val fontScale = context.resources.configuration.fontScale
+        val density = context.resources.displayMetrics.density
+        return px / (density * fontScale)
     }
 
     fun generateHotp (secret: String, algorithm: String, digits: Int, counter: Long): String {
@@ -663,10 +639,8 @@ class Cryptography () {
         //val publicKey = keypair.publicKey
         return lazySodium.cryptoBoxSealEasy(data, publicKey)
     }
-    fun decrypt (data: String, privateKey: com.goterl.lazysodium.utils.Key): String {
-        //val keypair = lazySodium.cryptoKxKeypair()
-        //val publicKey = keypair.publicKey
-        return lazySodium.cryptoBoxSealEasy(data, privateKey)
+    fun decrypt (data: String, keypair: com.goterl.lazysodium.utils.KeyPair): String {
+        return lazySodium.cryptoBoxSealOpenEasy(data, keypair)
     }
 }
 
@@ -863,7 +837,7 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
 
                     clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), mfaCode.replace(" ", "")))
 
-                    Handler().postDelayed({
+                    Handler(android.os.Looper.getMainLooper()).postDelayed({
                         code.post {
                             val cx: Int = code.width / 2
                             val cy: Int = code.height / 2
@@ -944,11 +918,10 @@ class LoginsAdapter(private var data: MutableList<Utilities.MfaCode>, val timer:
                         val tickerValue = (item.period - (second % item.period)) % item.period
 
                         try {
-                            progressIndicator.progress = tickerValue
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) progressIndicator.setProgress(tickerValue, true)
+                            progressIndicator.setProgress(tickerValue, true)
                         } catch (_: Exception) { }
 
-                        if (tickerValue == 29) {
+                        if (tickerValue == item.period - 1) {
 
                             CoroutineScope(Dispatchers.IO).launch {
                                 mfaCode = utilities.generateTotp(secret=item.secret, algorithm=item.algorithm, digits=item.digits, period=item.period)
